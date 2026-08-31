@@ -56,21 +56,35 @@ export const WishlistProvider = ({ children, user }) => {
     }
   };
 
-  const addToWishlist = async (productId) => {
+  const addToWishlist = async (productOrId) => {
+    let productId = productOrId;
+    let productObj = null;
+
+    if (typeof productOrId === 'object' && productOrId !== null) {
+      productObj = productOrId;
+      productId = productOrId._id || productOrId.id || productOrId.slug;
+    }
+
     const pIdStr = productId ? productId.toString() : '';
 
-    // Optimistically update local wishlist state
     setWishlist((prev) => {
       const exists = prev.some((item) => {
         const id = item.product?._id || item.product?.id || item._id || item.id;
         return id?.toString() === pIdStr;
       });
       if (exists) return prev;
+
       const newItem = {
         _id: productId,
-        product: { _id: productId, name: 'Fashion Product', price: 999 },
+        product: productObj || {
+          _id: productId,
+          name: 'Fashion Product',
+          price: 999,
+          images: ['https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600'],
+        },
         addedAt: new Date().toISOString(),
       };
+
       const updated = [...prev, newItem];
       AsyncStorage.setItem('@guest_wishlist', JSON.stringify(updated));
       return updated;
@@ -90,7 +104,12 @@ export const WishlistProvider = ({ children, user }) => {
     return { success: true };
   };
 
-  const removeFromWishlist = async (productId) => {
+  const removeFromWishlist = async (productOrId) => {
+    let productId = productOrId;
+    if (typeof productOrId === 'object' && productOrId !== null) {
+      productId = productOrId._id || productOrId.id || productOrId.slug;
+    }
+
     const pIdStr = productId ? productId.toString() : '';
 
     setWishlist((prev) => {
@@ -116,10 +135,16 @@ export const WishlistProvider = ({ children, user }) => {
     return { success: true };
   };
 
-  const isInWishlist = (productId) => {
-    if (!productId) return false;
-    const targetStr = productId.toString();
+  const isInWishlist = (productOrId) => {
+    if (!productOrId) return false;
+    let targetStr = productOrId;
+    if (typeof productOrId === 'object' && productOrId !== null) {
+      targetStr = productOrId._id || productOrId.id || productOrId.slug;
+    }
+    targetStr = targetStr ? targetStr.toString() : '';
+
     return wishlist.some((item) => {
+      if (!item) return false;
       const pId = item.product?._id || item.product?.id || item._id || item.id;
       return pId?.toString() === targetStr;
     });
