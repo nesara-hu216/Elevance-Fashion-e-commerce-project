@@ -31,26 +31,27 @@ export default function ProductCard({ product, onPress }) {
     ? Math.round(((originalPrice - price) / originalPrice) * 100)
     : 0);
 
-  const toggleWishlist = async (e) => {
-    e?.stopPropagation && e.stopPropagation();
+  const toggleWishlist = (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    if (e && e.preventDefault) e.preventDefault();
     const pId = product._id || product.id;
     if (isLiked) {
-      await removeFromWishlist(pId);
+      removeFromWishlist(pId);
     } else {
-      await addToWishlist(pId);
+      addToWishlist(pId);
     }
   };
 
   const handleQuickAdd = (e) => {
-    e?.stopPropagation && e.stopPropagation();
+    if (e && e.stopPropagation) e.stopPropagation();
+    if (e && e.preventDefault) e.preventDefault();
     if (!isOutOfStock) {
       addToCart(product._id || product.id);
     }
   };
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.88}
+    <View
       style={[
         styles.card,
         {
@@ -59,63 +60,74 @@ export default function ProductCard({ product, onPress }) {
           ...theme.shadows.small,
         },
       ]}
-      onPress={onPress}
     >
-      <View style={styles.imageContainer}>
-        <Image
-          source={{ uri: imgUri }}
-          onError={() => setImgUri(FALLBACK_IMAGE)}
-          style={styles.image}
-          resizeMode="cover"
-        />
+      <TouchableOpacity
+        activeOpacity={0.88}
+        style={styles.clickableArea}
+        onPress={onPress}
+      >
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: imgUri }}
+            onError={() => setImgUri(FALLBACK_IMAGE)}
+            style={styles.image}
+            resizeMode="cover"
+          />
 
-        {discountPercent > 0 && (
-          <View style={[styles.discountBadge, { backgroundColor: theme.colors.primary }]}>
-            <Text style={styles.discountText}>{discountPercent}% OFF</Text>
-          </View>
-        )}
-
-        <TouchableOpacity
-          style={[styles.wishlistBtn, { backgroundColor: 'rgba(255,255,255,0.9)' }]}
-          onPress={toggleWishlist}
-        >
-          <Text style={{ fontSize: 14 }}>{isLiked ? '❤️' : '🤍'}</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.details}>
-        {product.brand ? (
-          <Text numberOfLines={1} style={[styles.brand, { color: theme.colors.subtext }]}>
-            {product.brand}
-          </Text>
-        ) : null}
-
-        <Text numberOfLines={1} style={[styles.title, { color: theme.colors.text }]}>
-          {product.name}
-        </Text>
-
-        <View style={styles.priceRow}>
-          <Text style={[styles.price, { color: theme.colors.text }]}>₹{price}</Text>
-          {originalPrice && originalPrice > price ? (
-            <Text style={[styles.oldPrice, { color: theme.colors.subtext }]}>₹{originalPrice}</Text>
-          ) : null}
           {discountPercent > 0 && (
-            <Text style={[styles.offText, { color: theme.colors.success }]}>{discountPercent}% OFF</Text>
+            <View style={[styles.discountBadge, { backgroundColor: theme.colors.primary }]}>
+              <Text style={styles.discountText}>{discountPercent}% OFF</Text>
+            </View>
           )}
         </View>
 
-        {/* Delivery & Rating Badges */}
-        <View style={styles.badgeRow}>
-          <View style={[styles.freeDeliveryPill, { backgroundColor: theme.colors.successLight }]}>
-            <Text style={[styles.freeDeliveryText, { color: theme.colors.success }]}>🚚 Free Delivery</Text>
+        <View style={styles.details}>
+          {product.brand ? (
+            <Text numberOfLines={1} style={[styles.brand, { color: theme.colors.subtext }]}>
+              {product.brand}
+            </Text>
+          ) : null}
+
+          <Text numberOfLines={1} style={[styles.title, { color: theme.colors.text }]}>
+            {product.name}
+          </Text>
+
+          <View style={styles.priceRow}>
+            <Text style={[styles.price, { color: theme.colors.text }]}>₹{price}</Text>
+            {originalPrice && originalPrice > price ? (
+              <Text style={[styles.oldPrice, { color: theme.colors.subtext }]}>₹{originalPrice}</Text>
+            ) : null}
+            {discountPercent > 0 && (
+              <Text style={[styles.offText, { color: theme.colors.success }]}>{discountPercent}% OFF</Text>
+            )}
           </View>
 
-          <View style={[styles.ratingPill, { backgroundColor: theme.colors.success }]}>
-            <Text style={styles.ratingText}>{product.rating || 4.5} ★</Text>
+          {/* Delivery & Rating Badges */}
+          <View style={styles.badgeRow}>
+            <View style={[styles.freeDeliveryPill, { backgroundColor: theme.colors.successLight }]}>
+              <Text style={[styles.freeDeliveryText, { color: theme.colors.success }]}>🚚 Free Delivery</Text>
+            </View>
+
+            <View style={[styles.ratingPill, { backgroundColor: theme.colors.success }]}>
+              <Text style={styles.ratingText}>{product.rating || 4.5} ★</Text>
+            </View>
           </View>
         </View>
+      </TouchableOpacity>
 
+      {/* Standalone Wishlist Heart Button */}
+      <TouchableOpacity
+        activeOpacity={0.7}
+        style={[styles.wishlistBtn, { backgroundColor: 'rgba(255,255,255,0.92)' }]}
+        onPress={toggleWishlist}
+      >
+        <Text style={{ fontSize: 16 }}>{isLiked ? '❤️' : '🤍'}</Text>
+      </TouchableOpacity>
+
+      {/* Standalone Add To Cart Button */}
+      <View style={styles.btnPaddingContainer}>
         <TouchableOpacity
+          activeOpacity={0.8}
           disabled={isOutOfStock}
           style={[
             styles.addBtn,
@@ -128,7 +140,7 @@ export default function ProductCard({ product, onPress }) {
           <Text style={styles.addBtnText}>{isOutOfStock ? 'Out of Stock' : '+ Add to Cart'}</Text>
         </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -140,6 +152,10 @@ const styles = StyleSheet.create({
     marginRight: 12,
     marginBottom: 16,
     overflow: 'hidden',
+    position: 'relative',
+  },
+  clickableArea: {
+    width: '100%',
   },
   imageContainer: {
     height: 160,
@@ -168,14 +184,21 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 6,
     right: 6,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 10,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   details: {
     padding: 10,
+    paddingBottom: 4,
   },
   brand: {
     fontSize: 10,
@@ -212,7 +235,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   freeDeliveryPill: {
     paddingHorizontal: 6,
@@ -232,6 +255,10 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 10,
     fontWeight: '800',
+  },
+  btnPaddingContainer: {
+    paddingHorizontal: 10,
+    paddingBottom: 10,
   },
   addBtn: {
     height: 32,
