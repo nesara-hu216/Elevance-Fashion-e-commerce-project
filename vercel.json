@@ -13,14 +13,38 @@
       }
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/server/src/server.js"
+      "src": "/api/(.*)",
+      "dest": "/server/src/server.js"
     },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/api",
+      "dest": "/server/src/server.js"
+    },
+    {
+      "src": "/static/(.*)",
+      "dest": "/client/static/$1"
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/client/manifest.json"
+    },
+    {
+      "src": "/asset-manifest.json",
+      "dest": "/client/asset-manifest.json"
+    },
+    {
+      "src": "/serve.json",
+      "dest": "/client/serve.json"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/client/favicon.ico"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/client/index.html"
     }
   ]
 }

@@ -30,6 +30,7 @@ export default function ProductDetailScreen({ route, navigation }) {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     fetchProductDetails();
