@@ -129,6 +129,9 @@ function generateSectionProducts(category, gender, subcategories) {
       }
 
       products.push({
+        _id: slug,
+        id: slug,
+        productId: slug,
         name,
         slug,
         brand,
