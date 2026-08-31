@@ -63,8 +63,16 @@ export const CartProvider = ({ children, user }) => {
     }
   };
 
-  const addToCart = async (productId, variant = {}, quantity = 1) => {
+  const addToCart = async (productOrId, variant = {}, quantity = 1) => {
     try {
+      let productId = productOrId;
+      let productObj = null;
+
+      if (typeof productOrId === 'object' && productOrId !== null) {
+        productObj = productOrId;
+        productId = productOrId._id || productOrId.id || productOrId.slug;
+      }
+
       const payload = {
         productId,
         variantId: variant.variantId || 'default',
@@ -74,14 +82,7 @@ export const CartProvider = ({ children, user }) => {
       };
 
       const itemKey = `${productId}_${payload.variantId}_${payload.size}_${payload.color}`;
-
-      let productObj = null;
-      try {
-        const res = await api.get(`/products/${productId}`).catch(() => null);
-        if (res && res.data && res.data.product) {
-          productObj = res.data.product;
-        }
-      } catch (err) {}
+      const itemPrice = productObj?.discountPrice || productObj?.price || 999;
 
       setCart((prevCart) => {
         const existingItems = prevCart.items || [];
@@ -96,12 +97,17 @@ export const CartProvider = ({ children, user }) => {
             ...existingItems,
             {
               itemKey,
-              product: productObj || { _id: productId, name: 'Fashion Product', price: 999 },
+              product: productObj || {
+                _id: productId,
+                name: 'Fashion Product',
+                price: itemPrice,
+                images: ['https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600'],
+              },
               variantId: payload.variantId,
               size: payload.size,
               color: payload.color,
               quantity,
-              priceAtAddition: productObj?.discountPrice || productObj?.price || 999,
+              priceAtAddition: itemPrice,
             },
           ];
         }

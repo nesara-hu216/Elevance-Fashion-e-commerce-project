@@ -38,7 +38,7 @@ export default function ProductCard({ product, onPress }) {
     if (isLiked) {
       removeFromWishlist(pId);
     } else {
-      addToWishlist(pId);
+      addToWishlist(product);
     }
   };
 
@@ -46,7 +46,7 @@ export default function ProductCard({ product, onPress }) {
     if (e && e.stopPropagation) e.stopPropagation();
     if (e && e.preventDefault) e.preventDefault();
     if (!isOutOfStock) {
-      addToCart(product._id || product.id);
+      addToCart(product);
     }
   };
 
