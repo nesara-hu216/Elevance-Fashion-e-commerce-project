@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
+const fs = require('fs');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 const { startAbandonedCartScheduler } = require('./jobs/abandonedCartJob');
@@ -49,14 +51,11 @@ app.use('/api/theme', themeRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 
-// Root Endpoint
-app.get('/', (req, res) => {
-  res.json({
-    status: 'online',
-    service: 'Elevance E-Commerce REST API',
-    message: 'API is running successfully',
-  });
-});
+// Static Frontend Client Serving (Expo Web Build)
+const clientBuildPath = path.join(__dirname, '../../client/web-build');
+if (fs.existsSync(clientBuildPath)) {
+  app.use(express.static(clientBuildPath));
+}
 
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
@@ -65,6 +64,29 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date(),
     service: 'Elevance E-Commerce REST API',
   });
+});
+
+// Root Endpoint
+app.get('/', (req, res, next) => {
+  const indexHtml = path.join(clientBuildPath, 'index.html');
+  if (fs.existsSync(indexHtml)) {
+    return res.sendFile(indexHtml);
+  }
+  res.json({
+    status: 'online',
+    service: 'Elevance E-Commerce REST API',
+    message: 'API is running successfully',
+  });
+});
+
+// Catch-all SPA Client Routing Fallback
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  const indexHtml = path.join(clientBuildPath, 'index.html');
+  if (fs.existsSync(indexHtml)) {
+    return res.sendFile(indexHtml);
+  }
+  next();
 });
 
 // Global Error Handler Middleware
