@@ -401,7 +401,7 @@ export default function HomeScreen({ navigation }) {
                   <ProductCard
                     key={item._id || item.id}
                     product={item}
-                    onPress={() => navigation.navigate('ProductDetail', { productId: item._id || item.id || item.slug || 'prod_101' })}
+                    onPress={() => navigation.navigate('ProductDetail', { productId: item._id || item.id || item.slug || 'prod_101', initialProduct: item })}
                   />
                 ))}
               </View>

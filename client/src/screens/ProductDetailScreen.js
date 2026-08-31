@@ -34,16 +34,26 @@ export default function ProductDetailScreen({ route, navigation }) {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { trackProductView } = useRecentlyViewed();
 
-  const [product, setProduct] = useState(null);
+  const [product, setProduct] = useState(route?.params?.initialProduct || null);
   const [recommendations, setRecommendations] = useState([]);
-  const [selectedVariant, setSelectedVariant] = useState(null);
+  const [selectedVariant, setSelectedVariant] = useState(
+    route?.params?.initialProduct?.variants?.[0] || null
+  );
   const [quantity, setQuantity] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!route?.params?.initialProduct);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
+    if (route?.params?.initialProduct) {
+      const initP = route.params.initialProduct;
+      setProduct(initP);
+      if (initP.variants && initP.variants.length > 0) {
+        setSelectedVariant(initP.variants[0]);
+      }
+      setLoading(false);
+    }
     fetchProductDetails();
-  }, [productId, route?.params]);
+  }, [productId, route?.params?.productId]);
 
   const fetchProductDetails = async () => {
     let targetId = productId;
@@ -62,7 +72,7 @@ export default function ProductDetailScreen({ route, navigation }) {
     }
 
     try {
-      setLoading(true);
+      if (!product) setLoading(true);
       setNotFound(false);
 
       const prodRes = await api.get(`/products/${targetId}`);
@@ -75,20 +85,22 @@ export default function ProductDetailScreen({ route, navigation }) {
           setSelectedVariant(p.variants[0]);
         }
 
-        try {
-          const recRes = await api.get(`/recommendations?currentProductId=${p._id || p.id || productId}`);
-          if (recRes.data && recRes.data.recommendations) {
-            setRecommendations(recRes.data.recommendations);
-          }
-        } catch (rErr) {
-          // Recommendations optional
-        }
-      } else {
+        setLoading(false);
+
+        // Fetch recommendations asynchronously in background without blocking screen render
+        api.get(`/recommendations?currentProductId=${p._id || p.id || targetId}`)
+          .then((recRes) => {
+            if (recRes.data && recRes.data.recommendations) {
+              setRecommendations(recRes.data.recommendations);
+            }
+          })
+          .catch(() => {});
+      } else if (!product) {
         setNotFound(true);
       }
     } catch (e) {
       console.error('[ProductDetail] Error fetching product details', e);
-      setNotFound(true);
+      if (!product) setNotFound(true);
     } finally {
       setLoading(false);
     }
