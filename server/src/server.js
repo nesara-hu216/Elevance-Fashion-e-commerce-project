@@ -84,25 +84,29 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Root Endpoint
+// Root Endpoint - Always serve frontend HTML
 app.get('/', (req, res, next) => {
   const indexHtml = path.join(clientBuildPath, 'index.html');
   if (fs.existsSync(indexHtml)) {
     return res.sendFile(indexHtml);
   }
-  res.json({
-    status: 'online',
-    service: 'Elevance E-Commerce REST API',
-    message: 'API is running successfully',
-  });
+  const localSrcHtml = path.join(__dirname, 'web-build/index.html');
+  if (fs.existsSync(localSrcHtml)) {
+    return res.sendFile(localSrcHtml);
+  }
+  res.send(`<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>Elevance Fashion</title></head><body><div id="root"></div></body></html>`);
 });
 
-// Catch-all SPA Client Routing Fallback
+// Catch-all SPA Client Routing Fallback - Always serve frontend HTML
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api')) return next();
   const indexHtml = path.join(clientBuildPath, 'index.html');
   if (fs.existsSync(indexHtml)) {
     return res.sendFile(indexHtml);
+  }
+  const localSrcHtml = path.join(__dirname, 'web-build/index.html');
+  if (fs.existsSync(localSrcHtml)) {
+    return res.sendFile(localSrcHtml);
   }
   next();
 });

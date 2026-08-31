@@ -10,8 +10,9 @@ server/node_modules/
 .env.production
 
 # Build and export output
-web-build/
 client/web-build/
+!server/src/web-build/
+!server/web-build/
 dist/
 build/
 .expo/

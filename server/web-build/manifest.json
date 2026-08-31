@@ -1,0 +1,9 @@
+{
+  "description": "React Native Expo Mobile Application for Elevance E-Commerce",
+  "display": "standalone",
+  "lang": "en",
+  "name": "elevance-ecommerce-client",
+  "short_name": "elevance-ecommerce-client",
+  "start_url": "/?utm_source=web_app_manifest",
+  "orientation": "portrait"
+}
