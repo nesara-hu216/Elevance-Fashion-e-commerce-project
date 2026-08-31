@@ -8,9 +8,6 @@ const getBaseUrl = () => {
     return url.endsWith('/') ? url : `${url}/`;
   }
   if (typeof window !== 'undefined' && window.location && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    if (window.location.hostname.includes('vercel.app') && !window.location.hostname.startsWith('server')) {
-      return 'https://server-qkvm09vq4-ns-5641.vercel.app/api/';
-    }
     return `${window.location.origin}/api/`;
   }
   if (Platform.OS === 'android') {
