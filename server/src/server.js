@@ -49,6 +49,15 @@ app.use('/api/theme', themeRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 
+// Root Endpoint
+app.get('/', (req, res) => {
+  res.json({
+    status: 'online',
+    service: 'Elevance E-Commerce REST API',
+    message: 'API is running successfully',
+  });
+});
+
 // Health Check Endpoint
 app.get('/api/health', (req, res) => {
   res.json({
