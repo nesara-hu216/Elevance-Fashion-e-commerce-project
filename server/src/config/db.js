@@ -28,7 +28,12 @@ const autoSeedIfNeeded = async () => {
   }
 };
 
+let isConnected = false;
+
 const connectDB = async () => {
+  if (isConnected || mongoose.connection.readyState >= 1) {
+    return;
+  }
   try {
     const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/elevance_ecommerce';
 
@@ -36,6 +41,7 @@ const connectDB = async () => {
       const conn = await mongoose.connect(mongoUri, {
         serverSelectionTimeoutMS: 2000,
       });
+      isConnected = true;
       console.log(`[MongoDB] Connected to Host: ${conn.connection.host}`);
       await autoSeedIfNeeded();
       return;

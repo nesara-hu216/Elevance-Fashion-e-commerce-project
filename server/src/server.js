@@ -73,12 +73,14 @@ app.use(errorHandler);
 // Start Background Abandoned Cart Scheduler
 startAbandonedCartScheduler();
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`=======================================================`);
-  console.log(`🚀 Elevance E-Commerce Server running on port ${PORT}`);
-  console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`=======================================================`);
-});
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`=======================================================`);
+    console.log(`🚀 Elevance E-Commerce Server running on port ${PORT}`);
+    console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`=======================================================`);
+  });
+}
 
 module.exports = app;
