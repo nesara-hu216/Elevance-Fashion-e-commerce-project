@@ -112,43 +112,44 @@ exports.getProductById = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    let found = null;
-    const mongoose = require('mongoose');
+    const { generate2400Products } = require('../utils/catalogGenerator');
+    const { allProducts } = generate2400Products();
+    const searchId = id.toString().toLowerCase();
 
-    if (mongoose.connection.readyState === 1) {
-      try {
-        if (mongoose.Types.ObjectId.isValid(id)) {
-          found = await Product.findById(id);
-        }
-        if (!found) {
-          found = await Product.findOne({ slug: id });
-        }
-        if (!found) {
-          found = await Product.findOne({ _id: id });
-        }
-      } catch (dbErr) {}
+    // 1. Instant sub-millisecond lookup from pre-cached in-memory catalog
+    let found = allProducts.find((p) => {
+      if (!p) return false;
+      const pId = (p._id || p.id || '').toString().toLowerCase();
+      const pSlug = (p.slug || '').toString().toLowerCase();
+      return pId === searchId || pSlug === searchId;
+    });
+
+    // 2. Query MongoDB with .lean() if not matched in catalog generator
+    if (!found) {
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState === 1) {
+        try {
+          if (mongoose.Types.ObjectId.isValid(id)) {
+            found = await Product.findById(id).lean();
+          }
+          if (!found) {
+            found = await Product.findOne({ slug: id }).lean();
+          }
+          if (!found) {
+            found = await Product.findOne({ _id: id }).lean();
+          }
+        } catch (dbErr) {}
+      }
     }
 
+    // 3. Substring fallback match
     if (!found) {
-      const { generate2400Products } = require('../utils/catalogGenerator');
-      const { allProducts } = generate2400Products();
-      const searchId = id.toString().toLowerCase();
-
       found = allProducts.find((p) => {
         if (!p) return false;
         const pId = (p._id || p.id || '').toString().toLowerCase();
         const pSlug = (p.slug || '').toString().toLowerCase();
-        return pId === searchId || pSlug === searchId;
+        return (pId && searchId.includes(pId)) || (pSlug && searchId.includes(pSlug));
       });
-
-      if (!found) {
-        found = allProducts.find((p) => {
-          if (!p) return false;
-          const pId = (p._id || p.id || '').toString().toLowerCase();
-          const pSlug = (p.slug || '').toString().toLowerCase();
-          return (pId && searchId.includes(pId)) || (pSlug && searchId.includes(pSlug));
-        });
-      }
     }
 
     if (!found) {
