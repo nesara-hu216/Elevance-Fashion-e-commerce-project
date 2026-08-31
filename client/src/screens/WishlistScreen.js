@@ -30,7 +30,18 @@ export default function WishlistScreen({ navigation }) {
     );
   }
 
-  const validWishlistItems = wishlist.map((item) => item.product).filter(Boolean);
+  const validWishlistItems = wishlist
+    .map((item) => {
+      if (!item) return null;
+      if (item.product && typeof item.product === 'object' && (item.product.name || item.product._id)) {
+        return item.product;
+      }
+      if (item.name || item.price || item._id || item.id) {
+        return item;
+      }
+      return null;
+    })
+    .filter(Boolean);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -48,7 +59,7 @@ export default function WishlistScreen({ navigation }) {
         <FlatList
           contentContainerStyle={styles.listContent}
           data={validWishlistItems}
-          keyExtractor={(item) => item._id || item.id}
+          keyExtractor={(item, idx) => item._id || item.id || `wish_${idx}`}
           numColumns={2}
           columnWrapperStyle={styles.columnWrapper}
           renderItem={({ item }) => (
