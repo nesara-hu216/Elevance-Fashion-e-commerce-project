@@ -82,13 +82,16 @@ export default function HomeScreen({ navigation }) {
         catParam += `&search=${encodeURIComponent(searchQuery.trim())}`;
       }
 
-      // 1. Fetch main product catalog first to remove loading spinner immediately
       try {
         const prodRes = await api.get(`/products?page=${pageNum}&limit=24${catParam}`);
-        if (prodRes.data && prodRes.data.products) {
-          setProducts(prodRes.data.products);
-          setTotalPages(prodRes.data.pages || 1);
-          setTotalItems(prodRes.data.total || prodRes.data.products.length);
+        const rawProds = Array.isArray(prodRes?.data)
+          ? prodRes.data
+          : (prodRes?.data?.products || prodRes?.data?.data || prodRes?.data?.items || []);
+
+        if (Array.isArray(rawProds) && rawProds.length > 0) {
+          setProducts(rawProds);
+          setTotalPages(prodRes?.data?.pages || Math.ceil(rawProds.length / 24) || 1);
+          setTotalItems(prodRes?.data?.total || rawProds.length);
           setPage(pageNum);
         }
       } catch (err) {
