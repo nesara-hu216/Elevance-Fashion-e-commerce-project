@@ -72,6 +72,7 @@ export default function CheckoutScreen({ navigation }) {
           country: 'India',
         },
         paymentMethod,
+        items: cartItems,
       };
 
       const res = await api.post('/orders', orderPayload);
