@@ -6,7 +6,20 @@ const generateItemKey = (productId, variantId = 'default', size = 'Standard', co
   return `${productId}_${variantId}_${size}_${color}`;
 };
 
+const inMemoryCarts = new Map();
+
 const executeCartTransaction = async (userId, operationFn) => {
+  if (mongoose.connection.readyState !== 1) {
+    let cart = inMemoryCarts.get(userId) || { userId, items: [], savedItems: [] };
+    const errorResult = await operationFn(cart);
+    if (errorResult && errorResult.isErrorResponse) {
+      return errorResult;
+    }
+    cart.lastUpdated = new Date();
+    inMemoryCarts.set(userId, cart);
+    return { success: true, cart };
+  }
+
   let retries = 5;
   while (retries > 0) {
     try {
@@ -41,14 +54,23 @@ const executeCartTransaction = async (userId, operationFn) => {
 
 exports.getCart = async (req, res, next) => {
   try {
-    const cart = await Cart.findOne({ userId: req.user.id })
-      .populate('items.product')
-      .populate('savedItems.product');
+    if (mongoose.connection.readyState !== 1) {
+      const cart = inMemoryCarts.get(req.user.id) || { items: [], savedItems: [] };
+      const subtotal = (cart.items || []).reduce((acc, item) => {
+        const p = item.product || {};
+        const price = p.discountPrice || p.price || 999;
+        return acc + price * (item.quantity || 1);
+      }, 0);
+      const totalItems = (cart.items || []).reduce((acc, item) => acc + (item.quantity || 1), 0);
 
-    if (!cart) {
       return res.json({
         success: true,
-        cart: { items: [], savedItems: [], subtotal: 0, totalItems: 0 },
+        cart: {
+          items: cart.items || [],
+          savedItems: cart.savedItems || [],
+          subtotal,
+          totalItems,
+        },
       });
     }
 
