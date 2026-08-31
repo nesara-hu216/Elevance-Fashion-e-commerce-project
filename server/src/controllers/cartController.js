@@ -101,12 +101,36 @@ exports.getCart = async (req, res, next) => {
   }
 };
 
+const findProductByIdOrSlug = async (productId) => {
+  let product = null;
+  if (mongoose.connection.readyState === 1) {
+    try {
+      if (mongoose.Types.ObjectId.isValid(productId)) {
+        product = await Product.findById(productId);
+      }
+      if (!product) {
+        product = await Product.findOne({ slug: productId });
+      }
+      if (!product) {
+        product = await Product.findOne({ _id: productId });
+      }
+    } catch (e) {}
+  }
+  if (!product) {
+    const { generate2400Products } = require('../utils/catalogGenerator');
+    const { allProducts } = generate2400Products();
+    const searchId = (productId || '').toString().toLowerCase();
+    product = allProducts.find((p) => (p._id || p.id || p.slug || '').toString().toLowerCase() === searchId);
+  }
+  return product;
+};
+
 exports.addToCart = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { productId, variantId = 'default', size = 'Standard', color = 'Standard', quantity = 1 } = req.body;
 
-    const product = await Product.findById(productId);
+    const product = await findProductByIdOrSlug(productId);
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }

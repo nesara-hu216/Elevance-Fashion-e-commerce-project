@@ -116,7 +116,7 @@ export default function ProductDetailScreen({ route, navigation }) {
       ? { variantId: selectedVariant.variantId, size: selectedVariant.size, color: selectedVariant.color }
       : { variantId: 'default', size: 'Standard', color: 'Standard' };
 
-    const result = await addToCart(product._id, variantData, quantity);
+    const result = await addToCart(product, variantData, quantity);
     if (result.success) {
       Alert.alert('Added to Cart', `"${product.name}" added to your cart.`);
     } else {
