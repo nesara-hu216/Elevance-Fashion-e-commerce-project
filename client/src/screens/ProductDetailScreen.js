@@ -15,15 +15,11 @@ import { useWishlist } from '../context/WishlistContext';
 import { useRecentlyViewed } from '../context/RecentlyViewedContext';
 import Header from '../components/Header';
 import ProductCard from '../components/ProductCard';
+import EmptyState from '../components/EmptyState';
 import api from '../services/api';
 
 export default function ProductDetailScreen({ route, navigation }) {
-  const params = route?.params || {};
-  let rawId = params.productId;
-  if (!rawId || rawId === 'undefined' || rawId === '[object Object]') {
-    rawId = 'prod_101';
-  }
-  const productId = rawId;
+  const productId = route?.params?.productId;
   const { theme } = useTheme();
   const { addToCart } = useCart();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
@@ -40,107 +36,67 @@ export default function ProductDetailScreen({ route, navigation }) {
   }, [productId]);
 
   const fetchProductDetails = async () => {
+    if (!productId || productId === 'undefined') {
+      setNotFound(true);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      
-      let pData = null;
-      try {
-        const prodRes = await api.get(`/products/${productId}`);
-        if (prodRes.data && prodRes.data.product) {
-          pData = prodRes.data.product;
-        }
-      } catch (err) {
-        console.warn('[ProductDetail] Main API failed, using fallback item', err);
-      }
+      setNotFound(false);
 
-      if (!pData) {
-        const idLower = (productId || '').toLowerCase();
-        let fallbackName = 'DailyDrip Fashion Item';
-        let fallbackCat = 'Women';
-        let fallbackSub = 'Dresses';
-        let fallbackImg1 = 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600';
-        let fallbackImg2 = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600';
-        let fallbackPrice = 1299;
+      const prodRes = await api.get(`/products/${productId}`);
+      if (prodRes.data && prodRes.data.product) {
+        const p = prodRes.data.product;
+        setProduct(p);
+        trackProductView(p);
 
-        if (idLower.includes('footwear') || idLower.includes('shoe') || idLower.includes('sneaker')) {
-          fallbackName = 'Elevance Urban Runner Sneakers';
-          fallbackCat = 'Footwear';
-          fallbackSub = 'Sneakers';
-          fallbackImg1 = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600';
-          fallbackImg2 = 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=600';
-          fallbackPrice = 2999;
-        } else if (idLower.includes('jewel') || idLower.includes('earring') || idLower.includes('ring') || idLower.includes('necklace')) {
-          fallbackName = 'Elevance Royal Kundan Jhumka Earrings';
-          fallbackCat = 'Jewellery';
-          fallbackSub = 'Earrings';
-          fallbackImg1 = 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600';
-          fallbackImg2 = 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600';
-          fallbackPrice = 1899;
-        } else if (idLower.includes('men') || idLower.includes('shirt')) {
-          fallbackName = 'Elevance Designer Linen Casual Shirt';
-          fallbackCat = 'Men';
-          fallbackSub = 'Casual Shirts';
-          fallbackImg1 = 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600';
-          fallbackImg2 = 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600';
-          fallbackPrice = 1799;
-        } else if (idLower.includes('access') || idLower.includes('bag') || idLower.includes('handbag')) {
-          fallbackName = 'Elevance Luxury Leather Tote Bag';
-          fallbackCat = 'Accessories';
-          fallbackSub = 'Handbags';
-          fallbackImg1 = 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600';
-          fallbackImg2 = 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=600';
-          fallbackPrice = 3499;
+        if (p.variants && p.variants.length > 0) {
+          setSelectedVariant(p.variants[0]);
         }
 
-        pData = {
-          _id: productId || 'prod_101',
-          name: fallbackName,
-          brand: 'Elevance Signature',
-          category: fallbackCat,
-          subcategory: fallbackSub,
-          price: fallbackPrice,
-          originalPrice: fallbackPrice + 1000,
-          discountPercentage: 35,
-          discountPrice: fallbackPrice,
-          stock: 15,
-          rating: 4.8,
-          numReviews: 124,
-          description: `A premium ${fallbackCat.toLowerCase()} product crafted with superior materials for modern luxury and daily performance.`,
-          images: [fallbackImg1, fallbackImg2],
-          variants: [
-            { variantId: 'v1', size: 'Standard', color: 'Standard', price: fallbackPrice, stock: 5 },
-          ],
-        };
-      }
-
-      setProduct(pData);
-      trackProductView(pData);
-      if (pData.variants && pData.variants.length > 0) {
-        setSelectedVariant(pData.variants[0]);
-      }
-
-      try {
-        const recRes = await api.get(`/recommendations?currentProductId=${productId}`);
-        if (recRes.data && recRes.data.recommendations) {
-          setRecommendations(recRes.data.recommendations);
+        try {
+          const recRes = await api.get(`/recommendations?currentProductId=${p._id || p.id || productId}`);
+          if (recRes.data && recRes.data.recommendations) {
+            setRecommendations(recRes.data.recommendations);
+          }
+        } catch (rErr) {
+          // Recommendations optional
         }
-      } catch (rErr) {
-        // Recommendations optional
+      } else {
+        setNotFound(true);
       }
     } catch (e) {
-      console.error('[ProductDetail] Critical fetch error', e);
+      console.error('[ProductDetail] Error fetching product details', e);
+      setNotFound(true);
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading || !product) {
+  if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <Header title="Product Details" showBack navigation={navigation} />
         <View style={styles.centerLoading}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
+      </View>
+    );
+  }
+
+  if (notFound || !product) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <Header title="Product Details" showBack navigation={navigation} />
+        <EmptyState
+          icon="🔍"
+          title="Product Not Found"
+          description="The requested fashion item could not be found or is no longer available in the catalog."
+          actionLabel="Explore Catalog"
+          onAction={() => navigation.navigate('Home')}
+        />
       </View>
     );
   }

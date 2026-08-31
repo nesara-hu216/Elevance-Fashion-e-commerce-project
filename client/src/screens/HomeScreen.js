@@ -245,7 +245,7 @@ export default function HomeScreen({ navigation }) {
                 title="🔥 Trending Now"
                 subtitle="Most popular picks this week"
                 products={trendingProducts}
-                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id })}
+                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id || p.slug })}
               />
             )}
 
@@ -255,7 +255,7 @@ export default function HomeScreen({ navigation }) {
                 title="👗 Women's Dresses"
                 subtitle="Maxi, Midi, Mini & Bodycon Dresses"
                 products={womenFashion}
-                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id })}
+                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id || p.slug })}
                 onViewAll={() => {
                   setSelectedCategory('Women');
                   setSelectedSubcategory('Dresses');
@@ -311,7 +311,7 @@ export default function HomeScreen({ navigation }) {
                 title="👜 Handbags & Bags"
                 subtitle="Shoulder Bags, Tote Bags & Sling Bags"
                 products={accessoriesProducts}
-                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id })}
+                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id || p.slug })}
                 onViewAll={() => {
                   setSelectedCategory('Accessories');
                   setSelectedSubcategory('Handbags');
@@ -325,7 +325,7 @@ export default function HomeScreen({ navigation }) {
                 title="💄 Lipsticks & Beauty"
                 subtitle="Matte Lipsticks, Gloss & Foundations"
                 products={beautyProducts}
-                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id })}
+                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id || p.slug })}
                 onViewAll={() => {
                   setSelectedCategory('Beauty');
                   setSelectedSubcategory('Lipsticks');
@@ -339,7 +339,7 @@ export default function HomeScreen({ navigation }) {
                 title="🏃 Sports & Activewear"
                 subtitle="Track Pants, Sports Bras & Gym Gear"
                 products={sportsProducts}
-                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id })}
+                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id || p.slug })}
                 onViewAll={() => {
                   setSelectedCategory('Sports & Activewear');
                   setSelectedSubcategory('All');
@@ -360,7 +360,7 @@ export default function HomeScreen({ navigation }) {
                 title="✨ Recommended For You"
                 subtitle="Handpicked based on your taste"
                 products={recommendations}
-                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id })}
+                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id || p.slug })}
               />
             )}
 
@@ -370,7 +370,7 @@ export default function HomeScreen({ navigation }) {
                 title="🛍️ Continue Shopping"
                 subtitle="Pick up right where you left off"
                 products={continueShopping}
-                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id })}
+                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id || p.slug })}
               />
             )}
 
@@ -380,7 +380,7 @@ export default function HomeScreen({ navigation }) {
                 title="👀 Recently Viewed"
                 subtitle="Your recently inspected items"
                 products={recentlyViewed}
-                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id })}
+                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id || p.slug })}
               />
             )}
 
@@ -390,7 +390,7 @@ export default function HomeScreen({ navigation }) {
                 title="🏆 Bestsellers"
                 subtitle="Top rated customer favorites"
                 products={bestsellerProducts}
-                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id })}
+                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id || p.slug })}
               />
             )}
 
