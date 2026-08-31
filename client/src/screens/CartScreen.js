@@ -111,9 +111,14 @@ export default function CartScreen({ navigation }) {
                 {cartItems.map((item) => {
                   const product = item.product;
                   if (!product) return null;
-                  const itemPrice = product.discountPrice || product.price;
+                  const itemPrice = product.discountPrice || product.price || 999;
                   const isOutOfStock = product.stock <= 0;
-                  const hasPriceShift = item.priceAtAddition !== itemPrice;
+                  const hasPriceShift = item.priceAtAddition && item.priceAtAddition !== itemPrice;
+
+                  const imgUrl = (Array.isArray(product.images) && product.images[0]) ||
+                    product.image ||
+                    (typeof product.images === 'string' && product.images) ||
+                    'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600';
 
                   return (
                     <View
@@ -124,8 +129,9 @@ export default function CartScreen({ navigation }) {
                       ]}
                     >
                       <Image
-                        source={{ uri: product.images?.[0] || 'https://via.placeholder.com/150' }}
+                        source={{ uri: imgUrl }}
                         style={styles.itemImg}
+                        resizeMode="cover"
                       />
                       <View style={styles.itemInfo}>
                         <Text numberOfLines={2} style={[styles.itemName, { color: theme.colors.text }]}>
