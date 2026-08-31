@@ -118,7 +118,7 @@ exports.createOrder = async (req, res, next) => {
 
       orderItems.push({
         product: p._id || p.id || item.product || 'prod_' + Date.now(),
-        name: p.name || item.name || 'Fashion Product',
+        name: p.name || p.title || item.name || (p.brand ? `${p.brand} Fashion Item` : 'StyleAura Fashion Item'),
         image: img,
         variantId: item.variantId || 'default',
         size: item.size || 'Standard',

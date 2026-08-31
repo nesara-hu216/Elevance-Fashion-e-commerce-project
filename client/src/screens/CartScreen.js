@@ -112,7 +112,7 @@ export default function CartScreen({ navigation }) {
                 {/* Cart Items List */}
                 {cartItems.map((item) => {
                   const product = (typeof item.product === 'object' && item.product !== null) ? item.product : {};
-                  const productName = product.name || 'Fashion Product';
+                  const productName = product.name || product.title || product.productName || (product.brand ? `${product.brand} Fashion Item` : 'StyleAura Fashion Item');
                   const itemPrice = product.discountPrice || product.price || item.priceAtAddition || 999;
                   const isOutOfStock = product.stock <= 0;
                   const hasPriceShift = item.priceAtAddition && item.priceAtAddition !== itemPrice && item.priceAtAddition !== product.price;

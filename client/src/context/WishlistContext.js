@@ -78,7 +78,7 @@ export const WishlistProvider = ({ children, user }) => {
         _id: productId,
         product: productObj || {
           _id: productId,
-          name: 'Fashion Product',
+          name: (productObj && (productObj.name || productObj.title)) ? (productObj.name || productObj.title) : 'StyleAura Fashion Item',
           price: 999,
           images: ['https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600'],
         },
