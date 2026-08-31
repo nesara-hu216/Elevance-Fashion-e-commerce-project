@@ -70,7 +70,7 @@ export const CartProvider = ({ children, user }) => {
 
       if (typeof productOrId === 'object' && productOrId !== null) {
         productObj = productOrId;
-        productId = productOrId._id || productOrId.id || productOrId.slug;
+        productId = productOrId._id || productOrId.id || productOrId.slug || productOrId.productId;
       }
 
       const payload = {
@@ -92,6 +92,9 @@ export const CartProvider = ({ children, user }) => {
         if (existingIdx > -1) {
           updatedItems = [...existingItems];
           updatedItems[existingIdx].quantity += quantity;
+          if (productObj && productObj.name) {
+            updatedItems[existingIdx].product = productObj;
+          }
         } else {
           updatedItems = [
             ...existingItems,
@@ -99,8 +102,9 @@ export const CartProvider = ({ children, user }) => {
               itemKey,
               product: productObj || {
                 _id: productId,
-                name: 'Fashion Product',
+                name: 'StyleAura Fashion Item',
                 price: itemPrice,
+                discountPrice: itemPrice,
                 images: ['https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600'],
               },
               variantId: payload.variantId,
