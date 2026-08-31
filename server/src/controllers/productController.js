@@ -112,31 +112,42 @@ exports.getProductById = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    const { allProducts } = generate2400Products();
-    const searchId = id.toString().toLowerCase();
+    let found = null;
+    const mongoose = require('mongoose');
 
-    let found = allProducts.find((p) => {
-      if (!p) return false;
-      const pId = (p._id || p.id || '').toString().toLowerCase();
-      const pSlug = (p.slug || '').toString().toLowerCase();
-      return pId === searchId || pSlug === searchId;
-    });
+    if (mongoose.connection.readyState === 1) {
+      try {
+        if (mongoose.Types.ObjectId.isValid(id)) {
+          found = await Product.findById(id);
+        }
+        if (!found) {
+          found = await Product.findOne({ slug: id });
+        }
+        if (!found) {
+          found = await Product.findOne({ _id: id });
+        }
+      } catch (dbErr) {}
+    }
 
     if (!found) {
+      const { generate2400Products } = require('../utils/catalogGenerator');
+      const { allProducts } = generate2400Products();
+      const searchId = id.toString().toLowerCase();
+
       found = allProducts.find((p) => {
         if (!p) return false;
         const pId = (p._id || p.id || '').toString().toLowerCase();
         const pSlug = (p.slug || '').toString().toLowerCase();
-        return (pId && searchId.includes(pId)) || (pSlug && searchId.includes(pSlug));
+        return pId === searchId || pSlug === searchId;
       });
-    }
 
-    if (!found && mongoose.connection.readyState === 1) {
-      if (mongoose.Types.ObjectId.isValid(id)) {
-        found = await Product.findById(id);
-      }
       if (!found) {
-        found = await Product.findOne({ slug: id });
+        found = allProducts.find((p) => {
+          if (!p) return false;
+          const pId = (p._id || p.id || '').toString().toLowerCase();
+          const pSlug = (p.slug || '').toString().toLowerCase();
+          return (pId && searchId.includes(pId)) || (pSlug && searchId.includes(pSlug));
+        });
       }
     }
 

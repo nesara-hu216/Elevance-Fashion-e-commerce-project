@@ -97,34 +97,37 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
-    const cart = await Cart.findOne({ userId }).populate('items.product');
-    if (!cart || cart.items.length === 0) {
+    let cart = null;
+    try {
+      cart = await Cart.findOne({ userId }).populate('items.product');
+    } catch (err) {}
+
+    const rawItems = (cart && cart.items && cart.items.length > 0) ? cart.items : clientItems;
+
+    if (!rawItems || !Array.isArray(rawItems) || rawItems.length === 0) {
       return res.status(400).json({ success: false, message: 'Cannot place order with an empty cart' });
     }
 
     const orderItems = [];
     let subtotal = 0;
 
-    for (const item of cart.items) {
-      if (!item.product) {
-        return res.status(400).json({ success: false, message: 'One or more products in your cart are no longer available' });
-      }
-
-      const product = item.product;
-      const itemPrice = product.discountPrice || product.price || 999;
+    for (const item of rawItems) {
+      const p = item.product || {};
+      const itemPrice = p.discountPrice || p.price || item.price || 999;
+      const img = (Array.isArray(p.images) && p.images[0]) || p.image || item.image || 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600';
 
       orderItems.push({
-        product: product._id,
-        name: product.name,
-        image: (product.images && product.images[0]) || 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600',
-        variantId: item.variantId,
-        size: item.size,
-        color: item.color,
-        quantity: item.quantity,
+        product: p._id || p.id || item.product || 'prod_' + Date.now(),
+        name: p.name || item.name || 'Fashion Product',
+        image: img,
+        variantId: item.variantId || 'default',
+        size: item.size || 'Standard',
+        color: item.color || 'Standard',
+        quantity: item.quantity || 1,
         price: itemPrice,
       });
 
-      subtotal += itemPrice * item.quantity;
+      subtotal += itemPrice * (item.quantity || 1);
     }
 
     const taxTotal = Math.round(subtotal * 0.18);
@@ -132,9 +135,11 @@ exports.createOrder = async (req, res, next) => {
     const grandTotal = subtotal + taxTotal + shippingTotal;
 
     for (const item of orderItems) {
-      await Product.findByIdAndUpdate(item.product, {
-        $inc: { stock: -item.quantity, salesCount: item.quantity },
-      }).catch(() => {});
+      if (mongoose.Types.ObjectId.isValid(item.product)) {
+        await Product.findByIdAndUpdate(item.product, {
+          $inc: { stock: -item.quantity, salesCount: item.quantity },
+        }).catch(() => {});
+      }
     }
 
     const order = await Order.create({
@@ -160,9 +165,11 @@ exports.createOrder = async (req, res, next) => {
     });
 
     globalInMemoryOrders.unshift(order);
-    cart.items = [];
-    cart.lastUpdated = new Date();
-    await cart.save().catch(() => {});
+    if (cart) {
+      cart.items = [];
+      cart.lastUpdated = new Date();
+      await cart.save().catch(() => {});
+    }
 
     sendPushNotification({
       userId,
