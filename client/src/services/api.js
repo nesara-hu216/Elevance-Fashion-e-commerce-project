@@ -4,22 +4,23 @@ import { Platform } from 'react-native';
 
 const getBaseUrl = () => {
   if (typeof process !== 'undefined' && process.env && process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
+    let url = process.env.EXPO_PUBLIC_API_URL;
+    return url.endsWith('/') ? url : `${url}/`;
   }
   if (typeof window !== 'undefined' && window.location && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return `${window.location.origin}/api`;
+    return `${window.location.origin}/api/`;
   }
   if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:5000/api';
+    return 'http://10.0.2.2:5000/api/';
   }
-  return 'http://localhost:5000/api';
+  return 'http://localhost:5000/api/';
 };
 
 const API_BASE_URL = getBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 25000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -28,6 +29,10 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config) => {
     try {
+      // Fix relative URL leading slash if baseURL ends with slash
+      if (config.url && config.url.startsWith('/') && config.baseURL && config.baseURL.endsWith('/')) {
+        config.url = config.url.substring(1);
+      }
       const token = await AsyncStorage.getItem('@auth_token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;

@@ -83,7 +83,10 @@ export default function HomeScreen({ navigation }) {
       }
 
       const requests = [
-        api.get(`/products?page=${pageNum}&limit=24${catParam}`),
+        api.get(`/products?page=${pageNum}&limit=24${catParam}`).catch((err) => {
+          console.error('[HomeScreen Error]', err);
+          return { data: { products: [], total: 0, pages: 1 } };
+        }),
         api.get('/recommendations').catch(() => ({ data: { recommendations: [] } })),
         api.get('/users/me/continue-shopping').catch(() => ({ data: { products: [] } })),
       ];
