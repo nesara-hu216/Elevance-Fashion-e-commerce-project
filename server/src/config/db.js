@@ -46,6 +46,10 @@ const connectDB = async () => {
       await autoSeedIfNeeded();
       return;
     } catch (err) {
+      if (process.env.VERCEL) {
+        console.log('[MongoDB Warning on Vercel] MONGODB_URI not connected. Serving in-memory fallback catalog.');
+        return;
+      }
       console.log(`[MongoDB Warning] Local Mongo not found on ${mongoUri}. Starting in-memory database...`);
       const fs = require('fs');
       const dbPath = 'D:\\tmp\\mongo_dbdata';

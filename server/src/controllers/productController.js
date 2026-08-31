@@ -36,9 +36,48 @@ exports.getProducts = async (req, res, next) => {
     const limitNum = parseInt(limit, 10);
     const skip = (pageNum - 1) * limitNum;
 
+    const mongoose = require('mongoose');
+    const { generate2400Products } = require('../utils/catalogGenerator');
+
+    if (mongoose.connection.readyState !== 1) {
+      const { allProducts } = generate2400Products();
+      let filtered = [...allProducts];
+
+      if (category && category !== 'All') {
+        filtered = filtered.filter((p) => p.category === category);
+      }
+      if (subcategory) {
+        filtered = filtered.filter((p) => p.subcategory === subcategory);
+      }
+      if (search) {
+        const s = search.toLowerCase();
+        filtered = filtered.filter(
+          (p) =>
+            p.name.toLowerCase().includes(s) ||
+            p.brand.toLowerCase().includes(s) ||
+            p.category.toLowerCase().includes(s) ||
+            p.subcategory.toLowerCase().includes(s)
+        );
+      }
+      if (trending === 'true') {
+        filtered = filtered.filter((p) => p.isTrending);
+      }
+
+      const total = filtered.length;
+      const paginated = filtered.slice(skip, skip + limitNum);
+
+      return res.json({
+        success: true,
+        count: paginated.length,
+        total,
+        page: pageNum,
+        pages: Math.ceil(total / limitNum) || 1,
+        products: paginated,
+      });
+    }
+
     let total = await Product.countDocuments(query);
     if (total === 0 && Object.keys(query).length === 0) {
-      const { generate2400Products } = require('../utils/catalogGenerator');
       const { allProducts } = generate2400Products();
       try {
         await Product.insertMany(allProducts, { ordered: false });
