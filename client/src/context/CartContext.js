@@ -4,6 +4,16 @@ import api from '../services/api';
 
 const CartContext = createContext();
 
+const getProductIdFromItem = (target) => {
+  if (!target) return null;
+  if (typeof target === 'string') return target;
+  if (typeof target.product === 'string') return target.product;
+  if (typeof target.product === 'object' && target.product !== null) {
+    return target.product._id || target.product.id || target.product.slug || target.product.productId || null;
+  }
+  return target._id || target.id || target.slug || target.productId || null;
+};
+
 export const CartProvider = ({ children, user }) => {
   const [cart, setCart] = useState({ items: [], savedItems: [], subtotal: 0, totalItems: 0 });
   const [loading, setLoading] = useState(false);
@@ -38,8 +48,8 @@ export const CartProvider = ({ children, user }) => {
         const guestData = JSON.parse(storedGuest);
         if (guestData.items && guestData.items.length > 0) {
           for (const item of guestData.items) {
-            const pId = item.product?._id || item.product?.id || item.product;
-            if (pId) {
+            const pId = getProductIdFromItem(item);
+            if (pId && typeof pId === 'string' && pId !== '[object Object]') {
               await api.post('/cart/items', {
                 productId: pId,
                 variantId: item.variantId || 'default',
@@ -65,12 +75,11 @@ export const CartProvider = ({ children, user }) => {
 
   const addToCart = async (productOrId, variant = {}, quantity = 1) => {
     try {
-      let productId = productOrId;
-      let productObj = null;
+      let productId = getProductIdFromItem(productOrId);
+      let productObj = typeof productOrId === 'object' ? productOrId : null;
 
-      if (typeof productOrId === 'object' && productOrId !== null) {
-        productObj = productOrId;
-        productId = productOrId._id || productOrId.id || productOrId.slug || productOrId.productId;
+      if (!productId || productId === '[object Object]') {
+        return { success: false, message: 'Invalid product' };
       }
 
       const payload = {
@@ -102,10 +111,10 @@ export const CartProvider = ({ children, user }) => {
               itemKey,
               product: productObj || {
                 _id: productId,
-                name: 'StyleAura Fashion Item',
+                name: (productObj && productObj.name) ? productObj.name : 'Elevance Fashion Item',
                 price: itemPrice,
                 discountPrice: itemPrice,
-                images: ['https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600'],
+                images: (productObj && productObj.images) ? productObj.images : ['https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600'],
               },
               variantId: payload.variantId,
               size: payload.size,

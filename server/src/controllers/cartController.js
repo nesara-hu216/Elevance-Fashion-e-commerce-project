@@ -61,15 +61,33 @@ const formatPopulatedCart = async (cart) => {
   for (const item of rawItems) {
     if (!item) continue;
     let pObj = item.product;
-    if (typeof pObj === 'string' || (pObj && !pObj.name)) {
-      const pId = typeof pObj === 'string' ? pObj : (pObj._id || pObj.id || pObj.slug);
-      pObj = await findProductByIdOrSlug(pId);
+    let targetId = null;
+
+    if (typeof pObj === 'string') {
+      targetId = pObj;
+    } else if (pObj && typeof pObj === 'object') {
+      targetId = pObj._id || pObj.id || pObj.slug;
     }
+
+    if (!targetId || targetId === '[object Object]' || (pObj && !pObj.name)) {
+      if (item.itemKey) {
+        const parts = item.itemKey.split('_');
+        if (parts.length > 0 && parts[0] && parts[0] !== '[object Object]') {
+          targetId = parts[0];
+        }
+      }
+    }
+
+    if (targetId) {
+      pObj = await findProductByIdOrSlug(targetId);
+    }
+
     if (!pObj) {
       const { generate2400Products } = require('../utils/catalogGenerator');
       const { allProducts } = generate2400Products();
       pObj = allProducts[0];
     }
+
     items.push({
       itemKey: item.itemKey,
       product: pObj,
@@ -84,15 +102,33 @@ const formatPopulatedCart = async (cart) => {
   for (const item of rawSaved) {
     if (!item) continue;
     let pObj = item.product;
-    if (typeof pObj === 'string' || (pObj && !pObj.name)) {
-      const pId = typeof pObj === 'string' ? pObj : (pObj._id || pObj.id || pObj.slug);
-      pObj = await findProductByIdOrSlug(pId);
+    let targetId = null;
+
+    if (typeof pObj === 'string') {
+      targetId = pObj;
+    } else if (pObj && typeof pObj === 'object') {
+      targetId = pObj._id || pObj.id || pObj.slug;
     }
+
+    if (!targetId || targetId === '[object Object]' || (pObj && !pObj.name)) {
+      if (item.itemKey) {
+        const parts = item.itemKey.split('_');
+        if (parts.length > 0 && parts[0] && parts[0] !== '[object Object]') {
+          targetId = parts[0];
+        }
+      }
+    }
+
+    if (targetId) {
+      pObj = await findProductByIdOrSlug(targetId);
+    }
+
     if (!pObj) {
       const { generate2400Products } = require('../utils/catalogGenerator');
       const { allProducts } = generate2400Products();
       pObj = allProducts[0];
     }
+
     savedItems.push({
       itemKey: item.itemKey,
       product: pObj,
