@@ -6,6 +6,9 @@ const getBaseUrl = () => {
   if (typeof process !== 'undefined' && process.env && process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL;
   }
+  if (typeof window !== 'undefined' && window.location && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return `${window.location.origin}/api`;
+  }
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:5000/api';
   }
