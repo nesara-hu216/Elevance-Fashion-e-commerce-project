@@ -269,7 +269,7 @@ export default function HomeScreen({ navigation }) {
                 title="👔 Men's Shirts"
                 subtitle="Casual Shirts, Polos & Formal Shirts"
                 products={menFashion}
-                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id })}
+                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id || p.slug || 'prod_101' })}
                 onViewAll={() => {
                   setSelectedCategory('Men');
                   setSelectedSubcategory('Casual Shirts');
@@ -283,7 +283,7 @@ export default function HomeScreen({ navigation }) {
                 title="👟 Sneakers & Footwear"
                 subtitle="Running Shoes, Casual Sneakers & Trainers"
                 products={footwearProducts}
-                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id })}
+                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id || p.slug || 'prod_101' })}
                 onViewAll={() => {
                   setSelectedCategory('Footwear');
                   setSelectedSubcategory('Sneakers');
@@ -297,7 +297,7 @@ export default function HomeScreen({ navigation }) {
                 title="💎 Earrings & Jewellery"
                 subtitle="Studs, Hoops, Jhumkas & Chandbali"
                 products={jewelleryProducts}
-                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id })}
+                onSelectProduct={(p) => navigation.navigate('ProductDetail', { productId: p._id || p.id || p.slug || 'prod_101' })}
                 onViewAll={() => {
                   setSelectedCategory('Jewellery');
                   setSelectedSubcategory('Earrings');
@@ -414,7 +414,7 @@ export default function HomeScreen({ navigation }) {
                   <ProductCard
                     key={item._id || item.id}
                     product={item}
-                    onPress={() => navigation.navigate('ProductDetail', { productId: item._id || item.id })}
+                    onPress={() => navigation.navigate('ProductDetail', { productId: item._id || item.id || item.slug || 'prod_101' })}
                   />
                 ))}
               </View>

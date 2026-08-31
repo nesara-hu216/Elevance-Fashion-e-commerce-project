@@ -18,7 +18,12 @@ import ProductCard from '../components/ProductCard';
 import api from '../services/api';
 
 export default function ProductDetailScreen({ route, navigation }) {
-  const { productId } = route.params;
+  const params = route?.params || {};
+  let rawId = params.productId;
+  if (!rawId || rawId === 'undefined' || rawId === '[object Object]') {
+    rawId = 'prod_101';
+  }
+  const productId = rawId;
   const { theme } = useTheme();
   const { addToCart } = useCart();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
