@@ -150,17 +150,6 @@ const linking = {
 export default function AppNavigator() {
   const { theme } = useTheme();
 
-  useEffect(() => {
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      window.history.pushState(null, '', window.location.href);
-      const handlePopState = () => {
-        window.history.pushState(null, '', window.location.href);
-      };
-      window.addEventListener('popstate', handlePopState);
-      return () => window.removeEventListener('popstate', handlePopState);
-    }
-  }, []);
-
   return (
     <NavigationContainer linking={linking}>
       <Stack.Navigator

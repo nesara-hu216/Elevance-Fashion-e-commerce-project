@@ -19,7 +19,16 @@ import EmptyState from '../components/EmptyState';
 import api from '../services/api';
 
 export default function ProductDetailScreen({ route, navigation }) {
-  const productId = route?.params?.productId;
+  let productId = route?.params?.productId || route?.params?.id;
+
+  if (!productId && Platform.OS === 'web' && typeof window !== 'undefined') {
+    const parts = (window.location.pathname || '').split('/');
+    const pIdx = parts.indexOf('product');
+    if (pIdx > -1 && parts[pIdx + 1]) {
+      productId = parts[pIdx + 1];
+    }
+  }
+
   const { theme } = useTheme();
   const { addToCart } = useCart();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
@@ -34,10 +43,19 @@ export default function ProductDetailScreen({ route, navigation }) {
 
   useEffect(() => {
     fetchProductDetails();
-  }, [productId]);
+  }, [productId, route?.params]);
 
   const fetchProductDetails = async () => {
-    if (!productId || productId === 'undefined') {
+    let targetId = productId;
+    if (!targetId && Platform.OS === 'web' && typeof window !== 'undefined') {
+      const parts = (window.location.pathname || '').split('/');
+      const pIdx = parts.indexOf('product');
+      if (pIdx > -1 && parts[pIdx + 1]) {
+        targetId = parts[pIdx + 1];
+      }
+    }
+
+    if (!targetId || targetId === 'undefined') {
       setNotFound(true);
       setLoading(false);
       return;
@@ -47,7 +65,7 @@ export default function ProductDetailScreen({ route, navigation }) {
       setLoading(true);
       setNotFound(false);
 
-      const prodRes = await api.get(`/products/${productId}`);
+      const prodRes = await api.get(`/products/${targetId}`);
       if (prodRes.data && prodRes.data.product) {
         const p = prodRes.data.product;
         setProduct(p);
