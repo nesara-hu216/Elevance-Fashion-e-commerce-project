@@ -5,7 +5,7 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "build": "node -e \"const fs=require('fs');if(fs.existsSync('../client')){require('child_process').execSync('npm install && npm run build',{cwd:'../client',env:{...process.env,CI:'false'},stdio:'inherit'});if(fs.existsSync('../client/web-build')){fs.cpSync('../client/web-build','./web-build',{recursive:true});}}\"",
+    "build": "node -e \"const fs=require('fs');if(fs.existsSync('../client')){require('child_process').execSync('npm install && npm run build',{cwd:'../client',env:{...process.env,CI:'false'},stdio:'inherit'});if(fs.existsSync('../client/web-build')){fs.cpSync('../client/web-build','./web-build',{recursive:true});fs.cpSync('../client/web-build','./src/web-build',{recursive:true});}}\"",
     "dev": "node --watch src/server.js",
     "seed": "node src/utils/seed.js",
     "test": "node --test tests/*.test.js"

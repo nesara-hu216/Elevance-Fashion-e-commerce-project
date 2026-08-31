@@ -52,9 +52,25 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 
 // Static Frontend Client Serving (Expo Web Build)
-const clientBuildPath = fs.existsSync(path.join(__dirname, '../web-build'))
-  ? path.join(__dirname, '../web-build')
-  : path.join(__dirname, '../../client/web-build');
+const getClientBuildPath = () => {
+  const candidatePaths = [
+    path.join(__dirname, 'web-build'),
+    path.join(__dirname, '../web-build'),
+    path.join(__dirname, '../../client/web-build'),
+    path.join(process.cwd(), 'web-build'),
+    path.join(process.cwd(), 'client/web-build'),
+    path.join(process.cwd(), 'server/web-build'),
+    path.join(process.cwd(), 'server/src/web-build'),
+  ];
+  for (const p of candidatePaths) {
+    if (fs.existsSync(path.join(p, 'index.html'))) {
+      return p;
+    }
+  }
+  return path.join(__dirname, '../web-build');
+};
+
+const clientBuildPath = getClientBuildPath();
 if (fs.existsSync(clientBuildPath)) {
   app.use(express.static(clientBuildPath));
 }
