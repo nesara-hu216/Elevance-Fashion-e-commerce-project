@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   getCart,
   addToCart,
+  syncCart,
   updateQuantity,
   removeFromCart,
   clearCart,
@@ -16,6 +17,7 @@ router.use(protect);
 
 router.get('/', getCart);
 router.post('/', addToCart);
+router.post('/sync', syncCart);
 router.post('/items', addToCart);
 router.put('/:itemKey', updateQuantity);
 router.patch('/items/:itemKey', updateQuantity);

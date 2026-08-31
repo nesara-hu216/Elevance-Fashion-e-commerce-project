@@ -44,24 +44,33 @@ export const CartProvider = ({ children, user }) => {
     try {
       setLoading(true);
       const storedGuest = await AsyncStorage.getItem('@guest_cart');
+      let guestItems = [];
       if (storedGuest) {
-        const guestData = JSON.parse(storedGuest);
-        if (guestData.items && guestData.items.length > 0) {
-          for (const item of guestData.items) {
-            const pId = getProductIdFromItem(item);
-            if (pId && typeof pId === 'string' && pId !== '[object Object]') {
-              await api.post('/cart/items', {
-                productId: pId,
-                variantId: item.variantId || 'default',
-                size: item.size || 'Standard',
-                color: item.color || 'Standard',
-                quantity: item.quantity || 1,
-              }).catch(() => {});
-            }
+        try {
+          const parsed = JSON.parse(storedGuest);
+          guestItems = parsed.items || [];
+        } catch (e) {}
+      }
+
+      if (guestItems.length > 0) {
+        const payload = guestItems.map((item) => ({
+          productId: getProductIdFromItem(item),
+          variantId: item.variantId || 'default',
+          size: item.size || 'Standard',
+          color: item.color || 'Standard',
+          quantity: item.quantity || 1,
+        })).filter((i) => i.productId && typeof i.productId === 'string' && i.productId !== '[object Object]');
+
+        if (payload.length > 0) {
+          const syncRes = await api.post('/cart/sync', { items: payload }).catch(() => null);
+          if (syncRes && syncRes.data && syncRes.data.success) {
+            await AsyncStorage.removeItem('@guest_cart');
+            setCart(syncRes.data.cart);
+            return;
           }
-          await AsyncStorage.removeItem('@guest_cart');
         }
       }
+
       const res = await api.get('/cart');
       if (res.data && res.data.cart) {
         setCart(res.data.cart);

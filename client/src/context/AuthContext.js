@@ -35,9 +35,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.post('/auth/login', { email, password });
       if (res.data && res.data.token) {
+        await AsyncStorage.setItem('@auth_token', res.data.token);
         setToken(res.data.token);
         setUser(res.data.user);
-        await AsyncStorage.setItem('@auth_token', res.data.token);
         return { success: true };
       }
       return { success: false, message: 'Invalid response' };
@@ -53,9 +53,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.post('/auth/register', { name, email, password });
       if (res.data && res.data.token) {
+        await AsyncStorage.setItem('@auth_token', res.data.token);
         setToken(res.data.token);
         setUser(res.data.user);
-        await AsyncStorage.setItem('@auth_token', res.data.token);
         return { success: true };
       }
       return { success: false, message: 'Invalid response' };
@@ -68,9 +68,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    setUser(null);
-    setToken(null);
     await AsyncStorage.removeItem('@auth_token');
+    await AsyncStorage.removeItem('@guest_cart');
+    await AsyncStorage.removeItem('@guest_wishlist');
+    setToken(null);
+    setUser(null);
   };
 
   return (

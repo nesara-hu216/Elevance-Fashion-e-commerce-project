@@ -292,6 +292,59 @@ exports.addToCart = async (req, res, next) => {
   }
 };
 
+exports.syncCart = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { items = [] } = req.body;
+
+    const result = await executeCartTransaction(userId, async (cart) => {
+      for (const guestItem of items) {
+        if (!guestItem) continue;
+        const pId = guestItem.productId || (guestItem.product && (guestItem.product._id || guestItem.product.id || guestItem.product.slug));
+        if (!pId || pId === '[object Object]') continue;
+
+        const product = await findProductByIdOrSlug(pId);
+        if (!product) continue;
+
+        const variantId = guestItem.variantId || 'default';
+        const size = guestItem.size || 'Standard';
+        const color = guestItem.color || 'Standard';
+        const quantity = parseInt(guestItem.quantity || 1, 10);
+        const itemKey = generateItemKey(pId, variantId, size, color);
+        const currentPrice = product.discountPrice || product.price || 999;
+
+        // If item was in savedItems, remove it
+        cart.savedItems = cart.savedItems.filter((sItem) => sItem.itemKey !== itemKey);
+
+        const existingIndex = cart.items.findIndex((item) => item.itemKey === itemKey);
+        if (existingIndex > -1) {
+          cart.items[existingIndex].quantity += quantity;
+          cart.items[existingIndex].priceAtAddition = currentPrice;
+        } else {
+          cart.items.push({
+            itemKey,
+            product: pId,
+            variantId,
+            size,
+            color,
+            quantity,
+            priceAtAddition: currentPrice,
+          });
+        }
+      }
+    });
+
+    if (result.isErrorResponse) {
+      return res.status(result.status).json({ success: false, message: result.message });
+    }
+
+    const formattedCart = await formatPopulatedCart(result.cart);
+    return res.json({ success: true, message: 'Cart synchronized successfully', cart: formattedCart });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.updateQuantity = async (req, res, next) => {
   try {
     const userId = req.user.id;
