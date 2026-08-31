@@ -54,28 +54,61 @@ export default function ProductDetailScreen({ route, navigation }) {
       }
 
       if (!pData) {
+        const idLower = (productId || '').toLowerCase();
+        let fallbackName = 'DailyDrip Fashion Item';
+        let fallbackCat = 'Women';
+        let fallbackSub = 'Dresses';
+        let fallbackImg1 = 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600';
+        let fallbackImg2 = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600';
+        let fallbackPrice = 1299;
+
+        if (idLower.includes('footwear') || idLower.includes('shoe') || idLower.includes('sneaker')) {
+          fallbackName = 'Elevance Urban Runner Sneakers';
+          fallbackCat = 'Footwear';
+          fallbackSub = 'Sneakers';
+          fallbackImg1 = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600';
+          fallbackImg2 = 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=600';
+          fallbackPrice = 2999;
+        } else if (idLower.includes('jewel') || idLower.includes('earring') || idLower.includes('ring') || idLower.includes('necklace')) {
+          fallbackName = 'Elevance Royal Kundan Jhumka Earrings';
+          fallbackCat = 'Jewellery';
+          fallbackSub = 'Earrings';
+          fallbackImg1 = 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600';
+          fallbackImg2 = 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600';
+          fallbackPrice = 1899;
+        } else if (idLower.includes('men') || idLower.includes('shirt')) {
+          fallbackName = 'Elevance Designer Linen Casual Shirt';
+          fallbackCat = 'Men';
+          fallbackSub = 'Casual Shirts';
+          fallbackImg1 = 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600';
+          fallbackImg2 = 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600';
+          fallbackPrice = 1799;
+        } else if (idLower.includes('access') || idLower.includes('bag') || idLower.includes('handbag')) {
+          fallbackName = 'Elevance Luxury Leather Tote Bag';
+          fallbackCat = 'Accessories';
+          fallbackSub = 'Handbags';
+          fallbackImg1 = 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600';
+          fallbackImg2 = 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=600';
+          fallbackPrice = 3499;
+        }
+
         pData = {
           _id: productId || 'prod_101',
-          name: 'DailyDrip Fashion Item',
+          name: fallbackName,
           brand: 'Elevance Signature',
-          category: 'Women',
-          subcategory: 'Dresses',
-          price: 1299,
-          originalPrice: 2499,
-          discountPercentage: 48,
-          discountPrice: 1299,
+          category: fallbackCat,
+          subcategory: fallbackSub,
+          price: fallbackPrice,
+          originalPrice: fallbackPrice + 1000,
+          discountPercentage: 35,
+          discountPrice: fallbackPrice,
           stock: 15,
           rating: 4.8,
           numReviews: 124,
-          description: 'A stylish and comfortable high-end fashion piece engineered for modern elegance and versatile daily wear.',
-          images: [
-            'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600',
-            'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600',
-          ],
+          description: `A premium ${fallbackCat.toLowerCase()} product crafted with superior materials for modern luxury and daily performance.`,
+          images: [fallbackImg1, fallbackImg2],
           variants: [
-            { variantId: 'v1', size: 'S', color: 'Black', price: 1299, stock: 5 },
-            { variantId: 'v2', size: 'M', color: 'Black', price: 1299, stock: 5 },
-            { variantId: 'v3', size: 'L', color: 'Black', price: 1299, stock: 5 },
+            { variantId: 'v1', size: 'Standard', color: 'Standard', price: fallbackPrice, stock: 5 },
           ],
         };
       }

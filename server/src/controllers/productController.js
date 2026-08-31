@@ -115,32 +115,38 @@ exports.getProducts = async (req, res, next) => {
 exports.getProductById = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const { allProducts } = generate2400Products();
+    const searchId = id ? id.toString().toLowerCase() : '';
 
-    if (mongoose.connection.readyState !== 1) {
-      const { allProducts } = generate2400Products();
-      const product = allProducts.find(
-        (p) => (p._id && p._id.toString() === id) || (p.slug && p.slug === id) || (p.id && p.id.toString() === id)
-      ) || allProducts[0];
+    let found = allProducts.find((p) => {
+      if (!p) return false;
+      const pId = (p._id || p.id || '').toString().toLowerCase();
+      const pSlug = (p.slug || '').toString().toLowerCase();
+      return pId === searchId || pSlug === searchId || (searchId && (pId.includes(searchId) || searchId.includes(pId) || pSlug.includes(searchId) || searchId.includes(pSlug)));
+    });
 
-      return res.json({ success: true, product });
+    if (!found && mongoose.connection.readyState === 1) {
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        found = await Product.findById(id);
+      }
+      if (!found) {
+        found = await Product.findOne({ slug: id });
+      }
     }
 
-    let product = null;
-    if (mongoose.Types.ObjectId.isValid(id)) {
-      product = await Product.findById(id);
-    }
-    if (!product) {
-      product = await Product.findOne({ slug: id });
-    }
-
-    if (!product) {
-      const { allProducts } = generate2400Products();
-      product = allProducts.find(
-        (p) => (p._id && p._id.toString() === id) || (p.slug && p.slug === id)
-      ) || allProducts[0];
+    if (!found) {
+      found = allProducts.find((p) => {
+        const cat = (p.category || '').toLowerCase();
+        const sub = (p.subcategory || '').toLowerCase();
+        return (cat && searchId.includes(cat)) || (sub && searchId.includes(sub));
+      });
     }
 
-    res.json({ success: true, product });
+    if (!found) {
+      found = allProducts[0];
+    }
+
+    res.json({ success: true, product: found });
   } catch (error) {
     next(error);
   }
