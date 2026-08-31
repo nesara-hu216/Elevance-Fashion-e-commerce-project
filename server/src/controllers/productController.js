@@ -115,15 +115,28 @@ exports.getProducts = async (req, res, next) => {
 exports.getProductById = async (req, res, next) => {
   try {
     const { id } = req.params;
+    if (!id || id === 'undefined') {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
     const { allProducts } = generate2400Products();
-    const searchId = id ? id.toString().toLowerCase() : '';
+    const searchId = id.toString().toLowerCase();
 
     let found = allProducts.find((p) => {
       if (!p) return false;
       const pId = (p._id || p.id || '').toString().toLowerCase();
       const pSlug = (p.slug || '').toString().toLowerCase();
-      return pId === searchId || pSlug === searchId || (searchId && (pId.includes(searchId) || searchId.includes(pId) || pSlug.includes(searchId) || searchId.includes(pSlug)));
+      return pId === searchId || pSlug === searchId;
     });
+
+    if (!found) {
+      found = allProducts.find((p) => {
+        if (!p) return false;
+        const pId = (p._id || p.id || '').toString().toLowerCase();
+        const pSlug = (p.slug || '').toString().toLowerCase();
+        return (pId && searchId.includes(pId)) || (pSlug && searchId.includes(pSlug));
+      });
+    }
 
     if (!found && mongoose.connection.readyState === 1) {
       if (mongoose.Types.ObjectId.isValid(id)) {
@@ -135,18 +148,10 @@ exports.getProductById = async (req, res, next) => {
     }
 
     if (!found) {
-      found = allProducts.find((p) => {
-        const cat = (p.category || '').toLowerCase();
-        const sub = (p.subcategory || '').toLowerCase();
-        return (cat && searchId.includes(cat)) || (sub && searchId.includes(sub));
-      });
+      return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    if (!found) {
-      found = allProducts[0];
-    }
-
-    res.json({ success: true, product: found });
+    return res.json({ success: true, product: found });
   } catch (error) {
     next(error);
   }

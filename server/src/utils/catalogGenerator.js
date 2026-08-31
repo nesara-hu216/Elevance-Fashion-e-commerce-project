@@ -161,7 +161,13 @@ function generateSectionProducts(category, gender, subcategories) {
   return products;
 }
 
+let cachedCatalogResult = null;
+
 function generate2400Products() {
+  if (cachedCatalogResult) {
+    return cachedCatalogResult;
+  }
+
   console.log('[Generator] Building genuinely distinct fashion catalog items across ALL 8 categories...');
   clearUsedImages();
   masterId = 101;
@@ -227,7 +233,7 @@ function generate2400Products() {
 
   console.log(`[Generator] Created ${allProducts.length} total products across all 8 major departments.`);
 
-  return {
+  cachedCatalogResult = {
     women: womenProds.length,
     men: menProds.length,
     footwear: footwearProds.length,
@@ -239,6 +245,8 @@ function generate2400Products() {
     total: allProducts.length,
     allProducts,
   };
+
+  return cachedCatalogResult;
 }
 
 module.exports = {
