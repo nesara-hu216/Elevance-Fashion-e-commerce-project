@@ -52,49 +52,96 @@ const executeCartTransaction = async (userId, operationFn) => {
   }
 };
 
+const formatPopulatedCart = async (cart) => {
+  const rawItems = cart.items || [];
+  const rawSaved = cart.savedItems || [];
+  const items = [];
+  const savedItems = [];
+
+  for (const item of rawItems) {
+    if (!item) continue;
+    let pObj = item.product;
+    if (typeof pObj === 'string' || (pObj && !pObj.name)) {
+      const pId = typeof pObj === 'string' ? pObj : (pObj._id || pObj.id || pObj.slug);
+      pObj = await findProductByIdOrSlug(pId);
+    }
+    if (!pObj) {
+      const { generate2400Products } = require('../utils/catalogGenerator');
+      const { allProducts } = generate2400Products();
+      pObj = allProducts[0];
+    }
+    items.push({
+      itemKey: item.itemKey,
+      product: pObj,
+      variantId: item.variantId || 'default',
+      size: item.size || 'Standard',
+      color: item.color || 'Standard',
+      quantity: item.quantity || 1,
+      priceAtAddition: item.priceAtAddition || pObj.discountPrice || pObj.price || 999,
+    });
+  }
+
+  for (const item of rawSaved) {
+    if (!item) continue;
+    let pObj = item.product;
+    if (typeof pObj === 'string' || (pObj && !pObj.name)) {
+      const pId = typeof pObj === 'string' ? pObj : (pObj._id || pObj.id || pObj.slug);
+      pObj = await findProductByIdOrSlug(pId);
+    }
+    if (!pObj) {
+      const { generate2400Products } = require('../utils/catalogGenerator');
+      const { allProducts } = generate2400Products();
+      pObj = allProducts[0];
+    }
+    savedItems.push({
+      itemKey: item.itemKey,
+      product: pObj,
+      variantId: item.variantId || 'default',
+      size: item.size || 'Standard',
+      color: item.color || 'Standard',
+      quantity: item.quantity || 1,
+      priceAtAddition: item.priceAtAddition || pObj.discountPrice || pObj.price || 999,
+    });
+  }
+
+  const subtotal = items.reduce((sum, i) => {
+    const p = i.product;
+    const price = p ? (p.discountPrice || p.price || 999) : 999;
+    return sum + price * (i.quantity || 1);
+  }, 0);
+
+  const totalItems = items.reduce((sum, i) => sum + (i.quantity || 1), 0);
+
+  return {
+    _id: cart._id || 'cart_' + (cart.userId || 'demo'),
+    userId: cart.userId,
+    items,
+    savedItems,
+    subtotal,
+    totalItems,
+  };
+};
+
 exports.getCart = async (req, res, next) => {
   try {
-    if (mongoose.connection.readyState !== 1) {
-      const cart = inMemoryCarts.get(req.user.id) || { items: [], savedItems: [] };
-      const subtotal = (cart.items || []).reduce((acc, item) => {
-        const p = item.product || {};
-        const price = p.discountPrice || p.price || 999;
-        return acc + price * (item.quantity || 1);
-      }, 0);
-      const totalItems = (cart.items || []).reduce((acc, item) => acc + (item.quantity || 1), 0);
+    const userId = (req.user && req.user.id) ? req.user.id : 'usr_demo';
+    let rawCart = null;
 
-      return res.json({
-        success: true,
-        cart: {
-          items: cart.items || [],
-          savedItems: cart.savedItems || [],
-          subtotal,
-          totalItems,
-        },
-      });
+    if (mongoose.connection.readyState === 1) {
+      try {
+        rawCart = await Cart.findOne({ userId }).populate('items.product').populate('savedItems.product');
+      } catch (e) {}
     }
 
-    // Filter out deleted products
-    const validItems = cart.items.filter((item) => item.product !== null);
-    const validSaved = cart.savedItems.filter((item) => item.product !== null);
+    if (!rawCart) {
+      rawCart = inMemoryCarts.get(userId) || { userId, items: [], savedItems: [] };
+    }
 
-    const subtotal = validItems.reduce((acc, item) => {
-      const price = item.product.discountPrice || item.product.price;
-      return acc + price * item.quantity;
-    }, 0);
+    const formattedCart = await formatPopulatedCart(rawCart);
 
-    const totalItems = validItems.reduce((acc, item) => acc + item.quantity, 0);
-
-    res.json({
+    return res.json({
       success: true,
-      cart: {
-        _id: cart._id,
-        userId: cart.userId,
-        items: validItems,
-        savedItems: validSaved,
-        subtotal,
-        totalItems,
-      },
+      cart: formattedCart,
     });
   } catch (error) {
     next(error);

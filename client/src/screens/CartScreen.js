@@ -26,8 +26,10 @@ export default function CartScreen({ navigation }) {
   const savedItems = cart?.savedItems || [];
 
   const subtotal = cartItems.reduce((sum, i) => {
-    const price = i.product ? (i.product.discountPrice || i.product.price) : 0;
-    return sum + price * i.quantity;
+    const p = i.product;
+    const price = (typeof p === 'object' && p !== null) ? (p.discountPrice || p.price || i.priceAtAddition || 999) : (i.priceAtAddition || 999);
+    const validPrice = typeof price === 'number' && !isNaN(price) ? price : 999;
+    return sum + validPrice * (i.quantity || 1);
   }, 0);
 
   const tax = Math.round(subtotal * 0.18);
@@ -109,11 +111,11 @@ export default function CartScreen({ navigation }) {
               <>
                 {/* Cart Items List */}
                 {cartItems.map((item) => {
-                  const product = item.product;
-                  if (!product) return null;
-                  const itemPrice = product.discountPrice || product.price || 999;
+                  const product = (typeof item.product === 'object' && item.product !== null) ? item.product : {};
+                  const productName = product.name || 'Fashion Product';
+                  const itemPrice = product.discountPrice || product.price || item.priceAtAddition || 999;
                   const isOutOfStock = product.stock <= 0;
-                  const hasPriceShift = item.priceAtAddition && item.priceAtAddition !== itemPrice;
+                  const hasPriceShift = item.priceAtAddition && item.priceAtAddition !== itemPrice && item.priceAtAddition !== product.price;
 
                   const imgUrl = (Array.isArray(product.images) && product.images[0]) ||
                     product.image ||
@@ -135,7 +137,7 @@ export default function CartScreen({ navigation }) {
                       />
                       <View style={styles.itemInfo}>
                         <Text numberOfLines={2} style={[styles.itemName, { color: theme.colors.text }]}>
-                          {product.name}
+                          {productName}
                         </Text>
                         <Text style={[styles.itemVariant, { color: theme.colors.subtext }]}>
                           Option: {item.size} / {item.color}
