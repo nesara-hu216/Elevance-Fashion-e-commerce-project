@@ -1,0 +1,15 @@
+{
+  "name": "elevance-ecommerce-app",
+  "version": "1.0.0",
+  "description": "Complete production-hardened E-Commerce Application with Expo and Express.js",
+  "main": "server/src/server.js",
+  "scripts": {
+    "start:server": "node server/src/server.js",
+    "dev:server": "node --watch server/src/server.js",
+    "seed": "node server/src/utils/seed.js",
+    "test:server": "node --test server/tests/*.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
