@@ -39,7 +39,32 @@ exports.getProducts = async (req, res, next) => {
     const mongoose = require('mongoose');
     const { generate2400Products } = require('../utils/catalogGenerator');
 
-    if (mongoose.connection.readyState !== 1) {
+    let products = [];
+    let total = 0;
+
+    if (mongoose.connection.readyState === 1) {
+      try {
+        let dbTotal = await Product.countDocuments({});
+        if (dbTotal === 0) {
+          const { allProducts } = generate2400Products();
+          try {
+            await Product.insertMany(allProducts, { ordered: false });
+          } catch (e) {}
+        }
+        total = await Product.countDocuments(query);
+        if (total > 0) {
+          products = await Product.find(query)
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(limitNum);
+        }
+      } catch (dbErr) {
+        console.error('[ProductController DB Query Error]', dbErr.message);
+      }
+    }
+
+    // Fallback to clean in-memory catalog generator if database returned 0 products
+    if (!products || products.length === 0) {
       const { allProducts } = generate2400Products();
       let filtered = [...allProducts];
 
@@ -63,43 +88,11 @@ exports.getProducts = async (req, res, next) => {
         filtered = filtered.filter((p) => p.isTrending);
       }
 
-      const total = filtered.length;
-      const paginated = filtered.slice(skip, skip + limitNum);
-
-      return res.json({
-        success: true,
-        count: paginated.length,
-        total,
-        page: pageNum,
-        pages: Math.ceil(total / limitNum) || 1,
-        products: paginated,
-      });
+      total = filtered.length;
+      products = filtered.slice(skip, skip + limitNum);
     }
 
-    let total = await Product.countDocuments(query);
-    if (total === 0 && Object.keys(query).length === 0) {
-      const { allProducts } = generate2400Products();
-      try {
-        await Product.insertMany(allProducts, { ordered: false });
-        total = await Product.countDocuments(query);
-      } catch (err) {
-        return res.json({
-          success: true,
-          count: allProducts.length,
-          total: allProducts.length,
-          page: 1,
-          pages: 1,
-          products: allProducts,
-        });
-      }
-    }
-
-    const products = await Product.find(query)
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(limitNum);
-
-    res.json({
+    return res.json({
       success: true,
       count: products.length,
       total,
