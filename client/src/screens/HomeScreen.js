@@ -82,59 +82,43 @@ export default function HomeScreen({ navigation }) {
         catParam += `&search=${encodeURIComponent(searchQuery.trim())}`;
       }
 
-      const requests = [
-        api.get(`/products?page=${pageNum}&limit=24${catParam}`).catch((err) => {
-          console.error('[HomeScreen Error]', err);
-          return { data: { products: [], total: 0, pages: 1 } };
-        }),
-        api.get('/recommendations').catch(() => ({ data: { recommendations: [] } })),
-        api.get('/users/me/continue-shopping').catch(() => ({ data: { products: [] } })),
-      ];
+      // 1. Fetch main product catalog first to remove loading spinner immediately
+      try {
+        const prodRes = await api.get(`/products?page=${pageNum}&limit=24${catParam}`);
+        if (prodRes.data && prodRes.data.products) {
+          setProducts(prodRes.data.products);
+          setTotalPages(prodRes.data.pages || 1);
+          setTotalItems(prodRes.data.total || prodRes.data.products.length);
+          setPage(pageNum);
+        }
+      } catch (err) {
+        console.error('[HomeScreen Primary Fetch Error]', err);
+      } finally {
+        setLoading(false);
+      }
+
+      // 2. Fetch carousels & recommendations asynchronously
+      api.get('/recommendations').then((res) => {
+        if (res.data?.recommendations) setRecommendations(res.data.recommendations);
+      }).catch(() => {});
+
+      api.get('/users/me/continue-shopping').then((res) => {
+        if (res.data?.products) setContinueShopping(res.data.products);
+      }).catch(() => {});
 
       if (selectedCategory === 'All' && selectedSubcategory === 'All' && pageNum === 1) {
-        requests.push(
-          api.get('/products?trending=true&limit=8').catch(() => ({ data: { products: [] } })),
-          api.get('/products?sort=popularity&limit=8').catch(() => ({ data: { products: [] } })),
-          api.get('/products?category=Women&limit=8').catch(() => ({ data: { products: [] } })),
-          api.get('/products?category=Men&limit=8').catch(() => ({ data: { products: [] } })),
-          api.get('/products?category=Footwear&limit=8').catch(() => ({ data: { products: [] } })),
-          api.get('/products?category=Jewellery&limit=8').catch(() => ({ data: { products: [] } })),
-          api.get('/products?category=Accessories&limit=8').catch(() => ({ data: { products: [] } })),
-          api.get('/products?category=Beauty&limit=8').catch(() => ({ data: { products: [] } })),
-          api.get(`/products?category=${encodeURIComponent('Sports & Activewear')}&limit=8`).catch(() => ({ data: { products: [] } }))
-        );
-      }
-
-      const results = await Promise.all(requests);
-      const [prodRes, recRes, csRes] = results;
-
-      if (prodRes.data && prodRes.data.products) {
-        setProducts(prodRes.data.products);
-        setTotalPages(prodRes.data.pages || 1);
-        setTotalItems(prodRes.data.total || prodRes.data.products.length);
-        setPage(pageNum);
-      }
-      if (recRes.data && recRes.data.recommendations) {
-        setRecommendations(recRes.data.recommendations);
-      }
-      if (csRes.data && csRes.data.products) {
-        setContinueShopping(csRes.data.products);
-      }
-
-      if (selectedCategory === 'All' && selectedSubcategory === 'All' && pageNum === 1 && results.length > 3) {
-        setTrendingProducts(results[3].data?.products || []);
-        setBestsellerProducts(results[4].data?.products || []);
-        setWomenFashion(results[5].data?.products || []);
-        setMenFashion(results[6].data?.products || []);
-        setFootwearProducts(results[7].data?.products || []);
-        setJewelleryProducts(results[8].data?.products || []);
-        setAccessoriesProducts(results[9].data?.products || []);
-        setBeautyProducts(results[10].data?.products || []);
-        setSportsProducts(results[11].data?.products || []);
+        api.get('/products?trending=true&limit=8').then((res) => setTrendingProducts(res.data?.products || [])).catch(() => {});
+        api.get('/products?sort=popularity&limit=8').then((res) => setBestsellerProducts(res.data?.products || [])).catch(() => {});
+        api.get('/products?category=Women&limit=8').then((res) => setWomenFashion(res.data?.products || [])).catch(() => {});
+        api.get('/products?category=Men&limit=8').then((res) => setMenFashion(res.data?.products || [])).catch(() => {});
+        api.get('/products?category=Footwear&limit=8').then((res) => setFootwearProducts(res.data?.products || [])).catch(() => {});
+        api.get('/products?category=Jewellery&limit=8').then((res) => setJewelleryProducts(res.data?.products || [])).catch(() => {});
+        api.get('/products?category=Accessories&limit=8').then((res) => setAccessoriesProducts(res.data?.products || [])).catch(() => {});
+        api.get('/products?category=Beauty&limit=8').then((res) => setBeautyProducts(res.data?.products || [])).catch(() => {});
+        api.get(`/products?category=${encodeURIComponent('Sports & Activewear')}&limit=8`).then((res) => setSportsProducts(res.data?.products || [])).catch(() => {});
       }
     } catch (e) {
       console.error('[Home] Error fetching data', e);
-    } finally {
       setLoading(false);
     }
   };
