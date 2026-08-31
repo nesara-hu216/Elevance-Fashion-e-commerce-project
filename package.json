@@ -4,7 +4,7 @@
   "description": "Complete production-hardened E-Commerce Application with Expo and Express.js",
   "main": "server/src/server.js",
   "scripts": {
-    "build": "cd client && npm run build",
+    "build": "node -e \"const fs=require('fs'),{execSync}=require('child_process');const dir=fs.existsSync('client')?'client':fs.existsSync('../client')?'../client':'.';execSync('npm run build',{cwd:dir,stdio:'inherit'});\"",
     "start:server": "node server/src/server.js",
     "dev:server": "node --watch server/src/server.js",
     "seed": "node server/src/utils/seed.js",

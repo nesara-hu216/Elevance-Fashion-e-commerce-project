@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "cd client && npm run build",
+  "buildCommand": "node -e \"const fs=require('fs'),{execSync}=require('child_process');const dir=fs.existsSync('client')?'client':fs.existsSync('../client')?'../client':'.';execSync('npm run build',{cwd:dir,stdio:'inherit'});\"",
   "outputDirectory": "client/web-build",
   "rewrites": [
     {
